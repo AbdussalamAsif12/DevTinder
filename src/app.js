@@ -1,18 +1,23 @@
 const express = require("express");
-const { adminAuth } = require("../middleware/auth");
+
 const app = express();
 
-app.use("/admin",adminAuth)
-
-app.get("/user", (req, res) => {
-  res.send({ task: "User Data Send", message: "oK! Done" });
+app.get("/getUserData", (req, res) => {
+  try {
+   
+    throw new Error("blah blah");
+    res.send("User Data send")
+  } catch (error) {
+    res.status(500).send("Some Error Contact support team")
+  }
 });
-app.get("/admin/getAllData", (req, res) => {
-  res.send({ task: "Get Admin All Data Sent", message: "oK! Done" });
-});
 
-app.get("/admin/deleteUser", (req, res) => {
-  res.send({ task: "Delete Admin a user", message: "oK! Done" });
+
+// Optional code to check the error
+app.use("/", (err, req, res, next) => {
+  if (err) {
+    res.status(500).send("something went wrong");
+  }
 });
 
 app.listen(3000, () => {
