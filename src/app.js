@@ -1,13 +1,17 @@
 const express = require("express");
 const connectDB = require("./config/database");
-const User = require("../src/models/models")
+const User = require("../src/models/models");
 const app = express();
+const mongoose = require("mongoose");
 
-app.use(express.json())
+
+
+
+app.use(express.json());
 
 // Post api
 app.post("/signup", async (req, res) => {
-  const user = new User(req.body)
+  const user = new User(req.body);
 
   try {
     await user.save();
@@ -17,66 +21,95 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-
 // get email api
 
-
-app.get('/user', async (req, res) => {
+app.get("/user", async (req, res) => {
   const userEmail = req.body.emailId;
 
   try {
-    const user = await User.find({ emailId: userEmail })
+    const user = await User.find({ emailId: userEmail });
     if (user.length === 0) {
-      res.status(404).send("User Not Found")
+      res.status(404).send("User Not Found");
+    } else {
+      res.send(user);
     }
-    else {
-      res.send(user)
-    }
-
   } catch (err) {
     res.status(400).send(`Some thing went wrong ${err.message}`);
   }
-
-
-})
+});
 
 // get all api
 
 app.get("/feed", async (req, res) => {
   const feed = await User.find({});
-  res.send(feed)
-})
+  res.send(feed);
+});
 
 // delete api
 
 app.delete("/user", async (req, res) => {
   const userId = req.body.userId;
   try {
-
     const user = await User.findByIdAndDelete({ _id: userId });
-    res.send("User delete Successfully")
-
+    res.send("User delete Successfully");
   } catch (err) {
-    res.status(400).send("Something went wrong")
+    res.status(400).send("Something went wrong");
   }
-})
+});
 
 // update api
 
-app.patch("/user", async (req, res) => {
-  const userId = req.body.userId;
+app.patch("/user/:userId", async (req, res) => {
+  const userId = req.params?.userId;
   const data = req.body;
+
+  const ALLOWED_UPDATES = [
+    "firstName",
+    "lastName",
+    "age",
+    "gender",
+    "photoUrl",
+    "about",
+    "skills",
+  ];
+
+  // understand this code from here ----
   try {
-    const user = await User.findByIdAndUpdate({ _id: userId }, data);
-    // const user = await User.findByIdAndUpdate(userId, data);
-    res.send(user)
+    // Validate userId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).send("Invalid user ID format");
+    }
 
+    // Validate update fields
+    const invalidFields = Object.keys(data).filter(
+      (k) => !ALLOWED_UPDATES.includes(k)
+    );
+    if (invalidFields.length > 0) {
+      return res
+        .status(400)
+        .send(`Update not allowed for fields: ${invalidFields.join(", ")}`);
+    }
+
+    // to here----
+    if (data?.skills.length > 10) {
+      throw new Error("Skills not be more then 10");
+    }
+    // Update user
+    const user = await User.findByIdAndUpdate({ _id: userId }, data, {
+      returnDocument: "after",
+      runValidators: true,
+    });
+
+    // Check if user exists
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    res.send(user);
   } catch (err) {
-    res.status(400).send(`Something went wrong ${err.message}`)
+    res.status(400).send(`User Update Failed: ${err.message}`);
   }
-})
-
-
+});
 
 // database connect
 
