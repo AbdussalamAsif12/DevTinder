@@ -4,20 +4,24 @@ const User = require("../src/models/models");
 const app = express();
 const mongoose = require("mongoose");
 
-
-
-
 app.use(express.json());
 
 // Post api
 app.post("/signup", async (req, res) => {
-  const user = new User(req.body);
+  const { emailId } = req.body;
+
+  // Check if the email is already registered (this is a business rule)
+  const existingUser = await User.findOne({ emailId });
+  if (existingUser) {
+    return res.status(400).send("Email already registered");
+  }
 
   try {
-    await user.save();
+    const user = new User(req.body); // Create a new user from the validated body
+    await user.save(); // Save to the database
     res.send("User Added Successfully");
   } catch (err) {
-    res.status(400).send(`Error saving the user ${err.message}`);
+    res.status(400).send(`Error saving the user: ${err.message}`);
   }
 });
 
@@ -71,6 +75,7 @@ app.patch("/user/:userId", async (req, res) => {
     "photoUrl",
     "about",
     "skills",
+    "password"
   ];
 
   // understand this code from here ----
@@ -91,9 +96,8 @@ app.patch("/user/:userId", async (req, res) => {
     }
 
     // to here----
-    if (data?.skills.length > 10) {
-      throw new Error("Skills not be more then 10");
-    }
+
+
     // Update user
     const user = await User.findByIdAndUpdate({ _id: userId }, data, {
       returnDocument: "after",
