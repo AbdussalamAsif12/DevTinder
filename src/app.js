@@ -1,27 +1,54 @@
 const express = require("express");
 const connectDB = require("./config/database");
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 const User = require("../src/models/models");
 const app = express();
-const mongoose = require("mongoose");
 
+const { validateSignUpData } = require("./utils/validation");
 app.use(express.json());
 
 // Post api
 app.post("/signup", async (req, res) => {
-  const { emailId } = req.body;
-
-  // Check if the email is already registered (this is a business rule)
-  const existingUser = await User.findOne({ emailId });
-  if (existingUser) {
-    return res.status(400).send("Email already registered");
-  }
+  // console.log("Request Body:", req.body); // Check incoming data
 
   try {
-    const user = new User(req.body); // Create a new user from the validated body
-    await user.save(); // Save to the database
+    await validateSignUpData(req);
+    const { firstName, lastName, emailId, password, age, gender } = req.body;
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    console.log(passwordHash);
+
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+      age,
+      gender,
+    });
+    await user.save();
     res.send("User Added Successfully");
   } catch (err) {
     res.status(400).send(`Error saving the user: ${err.message}`);
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const user = await User.findOne({ emailId: emailId });
+    if (!user) {
+      throw new Error("Invalid Credientials");
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (isPasswordValid) {
+      res.send("Login Successfull!!!");
+    } else {
+      throw new Error("Invalid Credientials");
+    }
+  } catch (err) {
+    res.status(400).send(`ERROR :  ${err.message}`);
   }
 });
 
@@ -75,7 +102,7 @@ app.patch("/user/:userId", async (req, res) => {
     "photoUrl",
     "about",
     "skills",
-    "password"
+    "password",
   ];
 
   // understand this code from here ----
@@ -96,7 +123,6 @@ app.patch("/user/:userId", async (req, res) => {
     }
 
     // to here----
-
 
     // Update user
     const user = await User.findByIdAndUpdate({ _id: userId }, data, {

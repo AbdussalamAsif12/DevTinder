@@ -46,7 +46,6 @@ const userSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Age is required"],
       min: [18, "Age must be at least 18"],
-      max: [120, "Age must not exceed 120"],
     },
     gender: {
       type: String,
@@ -67,36 +66,36 @@ const userSchema = new mongoose.Schema(
     },
     about: {
       type: String,
-      required: true,
+      // required: true,
       trim:true,
       default: "Tell us about yourself...",
-      validate(value) {
-        if (value.length < 10) {
-          throw new Error("About section must be at least 10 characters long");
-        } else if (value.length > 500) {
-          throw new Error("About section must not exceed 500 characters");
-        } else if (value === "Tell us about yourself...") {
-          throw new Error(
-            "Please update the 'about' section with something meaningful"
-          );
-        }
-      },
+      // validate(value) {
+      //   if (value.length < 10) {
+      //     throw new Error("About section must be at least 10 characters long");
+      //   } else if (value.length > 500) {
+      //     throw new Error("About section must not exceed 500 characters");
+      //   } else if (value === "Tell us about yourself...") {
+      //     throw new Error(
+      //       "Please update the 'about' section with something meaningful"
+      //     );
+      //   }
+      // },
     },
     skills: {
       type: [String],
-      required: [true, "Enter Your Skills"],
-      validate(value) {
-        if (value.length < 2) {
-          throw new Error("You must enter at least 2 skills");
-        } else if (value.length > 20) {
-          throw new Error("You can enter a maximum of 20 skills");
-        }
-        value.forEach((skill) => {
-          if (typeof skill !== "string" || skill.trim() === "") {
-            throw new Error("Each skill must be a non-empty string");
-          }
-        });
-      },
+      // required: [true, "Enter Your Skills"],
+      // validate(value) {
+      //   if (value.length < 2) {
+      //     throw new Error("You must enter at least 2 skills");
+      //   } else if (value.length > 20) {
+      //     throw new Error("You can enter a maximum of 20 skills");
+      //   }
+      //   value.forEach((skill) => {
+      //     if (typeof skill !== "string" || skill.trim() === "") {
+      //       throw new Error("Each skill must be a non-empty string");
+      //     }
+      //   });
+      // },
     },
   },
   {
