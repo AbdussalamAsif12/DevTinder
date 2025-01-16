@@ -3,10 +3,13 @@ const connectDB = require("./config/database");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const User = require("../src/models/models");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 const app = express();
 
 const { validateSignUpData } = require("./utils/validation");
 app.use(express.json());
+app.use(cookieParser());
 
 // Post api
 app.post("/signup", async (req, res) => {
@@ -39,16 +42,52 @@ app.post("/login", async (req, res) => {
     const { emailId, password } = req.body;
     const user = await User.findOne({ emailId: emailId });
     if (!user) {
-      throw new Error("Invalid Credientials");
+      throw new Error("Invalid Credentials");
     }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (isPasswordValid) {
-      res.send("Login Successfull!!!");
+      const token = await jwt.sign({ _id: user._id }, "DevTinder@790");
+      console.log("Generated Token: ", token);
+
+      // Correctly set the cookie
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+      });
+
+      res.send("Login Successful!!!");
     } else {
-      throw new Error("Invalid Credientials");
+      throw new Error("Invalid Credentials");
     }
   } catch (err) {
-    res.status(400).send(`ERROR :  ${err.message}`);
+    res.status(400).send(`ERROR: ${err.message}`);
+  }
+});
+
+app.get("/profile", async (req, res) => {
+  try {
+    const cookies = req.cookies;
+    const { token } = cookies;
+
+    if (!token) {
+      throw new Error("Invalid Token")
+    }
+
+    const decodeMessage = await jwt.verify(token, "DevTinder@790");
+    const { _id } = decodeMessage;
+
+    console.log("Logged In user is: " + _id);
+
+    const user = await User.findById(_id);
+    if(!user){
+      throw new Error("Please Login Again")
+    }
+    res.json(user);
+  } catch (err) {
+    console.error(err.message);
+    res.status(403).json({ error: "Invalid or expired token" });
   }
 });
 
