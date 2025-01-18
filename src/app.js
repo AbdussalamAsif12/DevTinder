@@ -15,10 +15,7 @@ const { userAuth } = require("./middleware/auth");
 app.use(express.json());
 app.use(cookieParser());
 
-// Post api
 app.post("/signup", async (req, res) => {
-  // console.log("Request Body:", req.body); // Check incoming data
-
   try {
     await validateSignUpData(req);
     const { firstName, lastName, emailId, password, age, gender } = req.body;
@@ -49,17 +46,14 @@ app.post("/login", async (req, res) => {
       throw new Error("Invalid Credentials");
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
     if (isPasswordValid) {
-      const token = await jwt.sign({ _id: user._id }, "DevTinder@790", {
-        expiresIn: "1d",
-      });
-      // console.log("Generated Token: ", token);
+      const token = await user.getJWT();
 
       // Correctly set the cookie
       res.cookie("token", token, {
         httpOnly: true,
-        expires:"1d"
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
       });
 
       res.send("Login Successful!!!");
@@ -88,8 +82,6 @@ app.post("/sendConnectionRequest", userAuth, async (req, res) => {
 
   res.send(`${user.firstName} : Send a connection request`);
 });
-
-// database connect
 
 connectDB()
   .then(() => {

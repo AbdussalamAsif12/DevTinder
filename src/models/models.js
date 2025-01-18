@@ -1,30 +1,33 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
 
 const userSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
-      trim:true,
-      lowercase:true,
+      trim: true,
+      lowercase: true,
       minLength: [4, "First name must be at least 4 characters long"],
       maxLength: [50, "First name must not exceed 50 characters"],
       required: [true, "Enter First Name"],
-      match: [/^[a-zA-Z\s]+$/, "First name should contain only alphabets"]
+      match: [/^[a-zA-Z\s]+$/, "First name should contain only alphabets"],
     },
     lastName: {
       type: String,
-      trim:true,
-      lowercase:true,
+      trim: true,
+      lowercase: true,
       minLength: [4, "Last name must be at least 4 characters long"],
       maxLength: [50, "Last name must not exceed 50 characters "],
       match: [/^[a-zA-Z\s]+$/, "Last name should contain only alphabets"],
     },
     emailId: {
       type: String,
-      trim:true,
+      trim: true,
       lowercase: true,
-      required: [true,"Email is required"],
+      required: [true, "Email is required"],
       unique: true,
       trim: true,
       validate(value) {
@@ -49,7 +52,7 @@ const userSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      lowercase:true,
+      lowercase: true,
       enum: {
         values: ["male", "female", "other"],
         message: `{VALUE} is not a valid gender type`,
@@ -67,7 +70,7 @@ const userSchema = new mongoose.Schema(
     about: {
       type: String,
       // required: true,
-      trim:true,
+      trim: true,
       default: "Tell us about yourself...",
       // validate(value) {
       //   if (value.length < 10) {
@@ -102,5 +105,24 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+userSchema.methods.getJWT = async function () {
+  const user = this;
+  const token = await jwt.sign({ _id: user._id }, "DevTinder@790", {
+    expiresIn: "7d",
+  });
+
+  return token;
+};
+
+userSchema.methods.validatePassword = async function (passwordInputByUser) {
+  const user = this;
+  const passwordHash = user.password;
+  const isPasswordValid = await bcrypt.compare(
+    passwordInputByUser,
+    passwordHash
+  );
+  return isPasswordValid;
+};
 
 module.exports = mongoose.model("User", userSchema);
