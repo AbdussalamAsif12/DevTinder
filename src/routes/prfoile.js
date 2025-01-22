@@ -51,11 +51,9 @@ profileRouter.patch("/profile/password", userAuth, async (req, res) => {
     }
 
     if (await bcrypt.compare(newPassword, req.user.password)) {
-      return res
-        .status(400)
-        .json({
-          error: "New password must not be the same as the old password.",
-        });
+      return res.status(400).json({
+        error: "New password must not be the same as the old password.",
+      });
     }
 
     req.user.password = await bcrypt.hash(newPassword, 10);

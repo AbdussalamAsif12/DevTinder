@@ -34,6 +34,22 @@ const validateSignUpData = async (req) => {
   }
 };
 
+const validateLoginData = async (req) => {
+  const { emailId, password } = req.body;
+
+  if (!emailId || !password) {
+    throw new Error("Enter Both Fields!");
+  }
+
+  if (!validator.isEmail(emailId)) {
+    throw new Error("Email is not valid!");
+  }
+
+  if (!password || typeof password !== "string") {
+    throw new Error("Password is required and must be a string!");
+  }
+};
+
 const validateEditProfileData = (req) => {
   const allowedEditFields = [
     "firstName",
@@ -51,7 +67,12 @@ const validateEditProfileData = (req) => {
   return idEditAllowed;
 };
 
+
+
+
+
 module.exports = {
   validateSignUpData,
+  validateLoginData,
   validateEditProfileData,
 };
