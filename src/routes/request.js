@@ -2,7 +2,7 @@ const express = require("express");
 const request = express.Router();
 const ConnectionRequest = require("../models/connection.model");
 const { userAuth } = require("../middleware/auth");
-
+const User = require("../models/user.model");
 request.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
   try {
     const fromUserId = req.user._id;
@@ -12,6 +12,15 @@ request.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
     const allowedStatus = ["ignored", "interested"];
     if (!allowedStatus.includes(status)) {
       return res.status(400).json(`message : Invalid Status Type ${status}`);
+    }
+    
+    
+    
+
+
+    const toUser = await User.findById(toUserId);
+    if (!toUser) {
+      return res.status(404).json({ message: "User not found" });
     }
 
     const existingConnectionRequest = await ConnectionRequest.findOne({
