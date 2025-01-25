@@ -13,10 +13,6 @@ request.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
     if (!allowedStatus.includes(status)) {
       return res.status(400).json(`message : Invalid Status Type ${status}`);
     }
-    
-    
-    
-
 
     const toUser = await User.findById(toUserId);
     if (!toUser) {
@@ -33,7 +29,7 @@ request.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
     if (existingConnectionRequest) {
       return res
         .status(400)
-        .send({ message: "Connection Request Already Exist" });
+        .send({ message: `Connection Request Already Exist` });
     }
 
     const connectionRequest = new ConnectionRequest({
@@ -45,7 +41,9 @@ request.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
     const data = await connectionRequest.save();
 
     res.json({
-      message: "Connection Request Sent Successfully!",
+      // logged in user all details in req
+      // toUser : user already in database
+      message: `${req.user.firstName} is ${status} in ${toUser.firstName}`,
       data,
     });
   } catch (err) {
