@@ -3,7 +3,6 @@ const validator = require("validator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-
 const userSchema = new mongoose.Schema(
   {
     firstName: {
@@ -105,6 +104,10 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// User.find({ firstName: 1, lastName: 1 });
+// optimize this code by indexing
+// userSchema.index({ firstName: 1, lastName: 1 });
 
 userSchema.methods.getJWT = async function () {
   const user = this;
