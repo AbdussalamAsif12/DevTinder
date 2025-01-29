@@ -8,6 +8,8 @@ request.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
     const fromUserId = req.user._id;
     const toUserId = req.params.toUserId;
     const status = req.params.status;
+    
+  //  User sending interest or ignored status to other user's or friends
 
     const allowedStatus = ["ignored", "interested"];
     if (!allowedStatus.includes(status)) {
