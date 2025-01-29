@@ -22,7 +22,7 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     const loggedInUser = req.user;
     // left side user already login -- // right side user came from body right now
     // loggedInUser.firstName = req.body.firstName;
-    Object.keys(req.body).forEach((key) => (loggedInUser[key] = req.body[key]));
+    Object.keys(req.body).forEach((key) => (loggedInUser[key] = req.body[key])); // replace upcoming input data to already login data
 
     await loggedInUser.save();
 
