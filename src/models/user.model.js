@@ -109,6 +109,8 @@ const userSchema = new mongoose.Schema(
 // optimize this code by indexing
 // userSchema.index({ firstName: 1, lastName: 1 });
 
+// Generating JWT Token
+
 userSchema.methods.getJWT = async function () {
   const user = this;
   const token = await jwt.sign({ _id: user._id }, "DevTinder@790", {
@@ -119,7 +121,7 @@ userSchema.methods.getJWT = async function () {
 };
 
 userSchema.methods.validatePassword = async function (passwordInputByUser) {
-  const user = this;
+  const user = this; // current login user
   const passwordHash = user.password;
   const isPasswordValid = await bcrypt.compare(
     passwordInputByUser,
