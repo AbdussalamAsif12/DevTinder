@@ -3,13 +3,14 @@ const request = express.Router();
 const ConnectionRequest = require("../models/connection.model");
 const { userAuth } = require("../middleware/auth");
 const User = require("../models/user.model");
+
 request.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
   try {
     const fromUserId = req.user._id;
     const toUserId = req.params.toUserId;
     const status = req.params.status;
-    
-  //  User sending interest or ignored status to other user's or friends
+
+    //  User sending interest or ignored status to other user's or friends
 
     const allowedStatus = ["ignored", "interested"];
     if (!allowedStatus.includes(status)) {
@@ -52,5 +53,38 @@ request.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
     res.status(400).send("ERROR: " + err.message);
   }
 });
+
+// change the interested status already in dbs in to the accpeted or rejected
+
+request.post(
+  "/request/review/:status/:requestId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.user;
+      const { status, requestId } = req.params;
+      const allowedStatus = ["accepted", "rejected"];
+      if (!allowedStatus.includes(status)) {
+        return res.status(400).json({ message: "Status not allowed!" });
+      }
+      const connectionRequest = await ConnectionRequest.findOne({
+        _id: requestId,
+        toUserId: loggedInUser,
+        status: "interested",
+      });
+      if (!connectionRequest) {
+        return res.status(404).json({
+          message: "Connection request not found",
+        });
+      }
+
+      connectionRequest.status = status;
+      const data = await connectionRequest.save();
+      res.json({ message: "Connection Request " + status, data });
+    } catch (err) {
+      res.status(400).send("ERROR: " + err.message);
+    }
+  }
+);
 
 module.exports = request;
