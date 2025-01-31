@@ -64,13 +64,15 @@ request.post(
       const loggedInUser = req.user;
       const { status, requestId } = req.params;
       const allowedStatus = ["accepted", "rejected"];
+      // check the user sending status only accpeted and reject 
       if (!allowedStatus.includes(status)) {
         return res.status(400).json({ message: "Status not allowed!" });
       }
       const connectionRequest = await ConnectionRequest.findOne({
-        _id: requestId,
-        toUserId: loggedInUser,
-        status: "interested",
+        // checking 3 conditions =>
+        _id: requestId, // find the request id the user A send to user B
+        toUserId: loggedInUser._id, // this request belongs to this user A or B
+        status: "interested", // status will be interested
       });
       if (!connectionRequest) {
         return res.status(404).json({
@@ -80,7 +82,7 @@ request.post(
 
       connectionRequest.status = status;
       const data = await connectionRequest.save();
-      res.json({ message: "Connection Request " + status, data });
+      res.json({ message: "Connection Request " + status, data,toUserId: loggedInUser._id });
     } catch (err) {
       res.status(400).send("ERROR: " + err.message);
     }
