@@ -2,6 +2,7 @@ const express = require("express");
 const userRouter = express.Router();
 const { userAuth } = require("../middleware/auth");
 const ConnectionRequest = require("../models/connection.model");
+const User = require("../models/user.model");
 const USER_SAVE_DATA = "firstName lastName age photoUrl gender skills";
 // Get all the pending/interested connection requests for the loggedIn User
 
@@ -41,6 +42,41 @@ userRouter.get("/user/connection", userAuth, async (req, res) => {
     res.json({ data });
   } catch (err) {
     res.status(400).send({ message: err.message });
+  }
+});
+
+userRouter.get("/feed", userAuth, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    limit = limit > 50 ? 50 : limit;
+    
+    // Find All Users on your feed but exclude yourself means the loggedIn User
+    const loggedInUser = req.user;
+    const connectionRequest = await ConnectionRequest.find({
+      $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
+    }).select("fromUserId , toUserId");
+
+    const hideUserFromFeed = new Set();
+    connectionRequest.forEach((req) => {
+      hideUserFromFeed.add(req.fromUserId.toString());
+      hideUserFromFeed.add(req.toUserId.toString());
+    });
+
+    const user = await User.find({
+      $and: [
+        { _id: { $nin: Array.from(hideUserFromFeed) } },
+        { _id: { $ne: loggedInUser._id } },
+      ],
+    })
+      .select(USER_SAVE_DATA)
+      .skip(skip)
+      .limit(limit);
+
+    res.send(user);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 });
 
