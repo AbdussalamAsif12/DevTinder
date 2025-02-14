@@ -6,7 +6,8 @@ const bcrypt = require("bcrypt");
 
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
-    const user = req.user;
+    const user = req.user; // login user coming from middeware
+    // console.log(user.firstName)
     res.send(user);
   } catch (err) {
     console.error(err.message);
@@ -19,7 +20,8 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     if (!validateEditProfileData(req)) {
       throw new Error("Invalid Edit Request");
     }
-    const loggedInUser = req.user;
+    const loggedInUser = req.user; // logged in user
+    
     // left side user already login -- // right side user came from body right now
     // loggedInUser.firstName = req.body.firstName;
     Object.keys(req.body).forEach((key) => (loggedInUser[key] = req.body[key])); // replace upcoming input data to already login data
