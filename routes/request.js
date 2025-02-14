@@ -46,7 +46,7 @@ request.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
     res.json({
       // logged in user all details in req
       // toUser : user already in database
-      message: `${req.user.firstName} is ${status} in ${toUser.firstName}`,
+      message: `${req.user.firstName} send ${status} status to ${toUser.firstName}`,
       data,
     });
   } catch (err) {

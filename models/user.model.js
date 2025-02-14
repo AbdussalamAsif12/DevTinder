@@ -122,7 +122,7 @@ userSchema.methods.getJWT = async function () {
 
 userSchema.methods.validatePassword = async function (passwordInputByUser) {
   const user = this; // current login user
-  const passwordHash = user.password;
+  const passwordHash = user.password; // login user already password store in dbs
   const isPasswordValid = await bcrypt.compare(
     passwordInputByUser,
     passwordHash

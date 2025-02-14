@@ -10,8 +10,7 @@ userRouter.get("/user/request/recieved", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
     const pendingRequest = await ConnectionRequest.find({
-      toUserId: loggedInUser._id, // find logged in user id and those connection that are attached to other's ex : user A interested in elon musk user B is interested in elon musk
-      //   or the logged in user check who send me interesting req or who is interested in me
+      toUserId: loggedInUser._id, // give me all those fields where my logged user id exist in toUserId field
       status: "interested",
     }).populate("fromUserId", USER_SAVE_DATA);
     res.json({ message: "Data Fetch Successfully", data: pendingRequest });
@@ -48,22 +47,23 @@ userRouter.get("/user/connection", userAuth, async (req, res) => {
 userRouter.get("/feed", userAuth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    let limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     limit = limit > 50 ? 50 : limit;
-    
+
     // Find All Users on your feed but exclude yourself means the loggedIn User
     const loggedInUser = req.user;
     const connectionRequest = await ConnectionRequest.find({
       $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
     }).select("fromUserId , toUserId");
 
+    // put all user in set these user cannot be see on feed
     const hideUserFromFeed = new Set();
     connectionRequest.forEach((req) => {
       hideUserFromFeed.add(req.fromUserId.toString());
       hideUserFromFeed.add(req.toUserId.toString());
     });
-
+    // these users can be see
     const user = await User.find({
       $and: [
         { _id: { $nin: Array.from(hideUserFromFeed) } },
