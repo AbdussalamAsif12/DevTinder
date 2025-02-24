@@ -2,7 +2,10 @@ const express = require("express");
 const authRouter = express.Router();
 
 const bcrypt = require("bcrypt");
-const { validateSignUpData, validateLoginData } = require("../utils/validation");
+const {
+  validateSignUpData,
+  validateLoginData,
+} = require("../utils/validation");
 const User = require("../models/user.model");
 
 authRouter.post("/signup", async (req, res) => {
@@ -21,17 +24,23 @@ authRouter.post("/signup", async (req, res) => {
       age,
       gender,
     });
-    await user.save();
-    res.send("User Added Successfully");
+    const savedUser = await user.save();
+    const token = await savedUser.getJWT();
+
+      // Correctly set the cookie
+      res.cookie("token", token, {
+        httpOnly: true,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+    res.json({ message: "User Added Successfully", data: savedUser });
   } catch (err) {
     res.status(400).send(`Error saving the user: ${err.message}`);
   }
 });
 
-
 authRouter.post("/login", async (req, res) => {
   try {
-    await validateLoginData(req)
+    await validateLoginData(req);
     const { emailId, password } = req.body;
     const user = await User.findOne({ emailId: emailId });
     if (!user) {
@@ -48,7 +57,7 @@ authRouter.post("/login", async (req, res) => {
         expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
       });
 
-      res.send("Login Successful!!!");
+      res.send(user);
     } else {
       throw new Error("Invalid Credentials");
     }
@@ -62,9 +71,9 @@ authRouter.post("/logout", async (req, res) => {
     res.cookie("token", null, {
       expires: new Date(Date.now()),
     });
-    res.send("Logout Successfully!")
+    res.send("Logout Successfully!");
   } catch (err) {
-    throw new err(`ERROR : ${err.message}`)
+    throw new err(`ERROR : ${err.message}`);
   }
 });
 
