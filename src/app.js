@@ -25,7 +25,7 @@ app.use("/", userRouter);
 connectDB()
   .then(() => {
     console.log("Database connection established....");
-    app.listen(7777, () => {
+    app.listen(process.env.PORT, () => {
       console.log(`Server is successfully listing on PORT 7777....`);
     });
   })
